@@ -1,6 +1,5 @@
 import sys
 sys.path.insert(0, '../app')
-
 from app import app
 import pytest
 
@@ -26,11 +25,16 @@ def test_health_endpoint(client):
     assert data['status'] == 'healthy'
 
 def test_request_counter(client):
-    """Testa se o contador de requisições funciona"""
-    response1 = client.get('/')
-    count1 = response1.get_json()['total_requests']
+    """Testa se o contador de requisições funciona (Validando via /metrics)"""
+    # 1. Verifica contagem inicial em /metrics
+    r_start = client.get('/metrics')
+    count_start = r_start.get_json()['total_requests']
     
-    response2 = client.get('/')
-    count2 = response2.get_json()['total_requests']
+    # 2. Faz uma requisição na home para incrementar
+    client.get('/')
     
-    assert count2 > count1
+    # 3. Verifica contagem final em /metrics
+    r_end = client.get('/metrics')
+    count_end = r_end.get_json()['total_requests']
+    
+    assert count_end > count_start
